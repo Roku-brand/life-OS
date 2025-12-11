@@ -36,7 +36,7 @@ const DEFAULT_ROUTINES = [
   { id: "r_2200", time: "22:00", activity: "入浴（湯船）" },
   { id: "r_2230", time: "22:30", activity: "瞑想・ライトダウン" },
   { id: "r_2300", time: "23:00", activity: "読書・就寝準備" },
-  { id: "r_2430", time: "24:30", activity: "就寝" },
+  { id: "r_0030", time: "00:30", activity: "就寝（翌日）" },
 ];
 
 // 編集中ID管理用
@@ -386,7 +386,10 @@ function loadRoutines() {
   const isValidTimetable =
     Array.isArray(routines) &&
     routines.every(
-      (r) => typeof r.time === "string" && typeof r.activity === "string"
+      (r) =>
+        typeof r.time === "string" &&
+        typeof r.activity === "string" &&
+        isValidTime(r.time)
     );
 
   if (!isValidTimetable || routines.length === 0) {
@@ -412,6 +415,11 @@ function setupRoutineEvents() {
       return;
     }
 
+    if (!isValidTime(time)) {
+      showMessage(msgEl, "時刻は 00:00 〜 23:59 形式で入力してください。", true);
+      return;
+    }
+
     let routines = getRoutines();
 
     if (editingRoutineId) {
@@ -428,6 +436,8 @@ function setupRoutineEvents() {
       };
       routines.push(newRoutine);
     }
+
+    routines = sortRoutines(routines);
 
     localStorage.setItem(
       STORAGE_KEYS.routines,
@@ -458,6 +468,8 @@ function getRoutines() {
 function renderRoutines(routines) {
   const listEl = document.getElementById("routine-list");
   listEl.innerHTML = "";
+
+  routines = sortRoutines(routines);
 
   if (!routines.length) {
     const empty = document.createElement("div");
@@ -536,12 +548,30 @@ function deleteRoutine(id) {
   if (!confirm("このルーティーンを削除しますか？")) return;
   let routines = getRoutines();
   routines = routines.filter((r) => r.id !== id);
+  routines = sortRoutines(routines);
   localStorage.setItem(
     STORAGE_KEYS.routines,
     JSON.stringify(routines)
   );
 
   renderRoutines(routines);
+}
+
+function isValidTime(value) {
+  // 00-23 for hours, 00-59 for minutes
+  return /^([01]?\\d|2[0-3]):[0-5]\\d$/.test(value);
+}
+
+function parseTimeToMinutes(value) {
+  if (!isValidTime(value)) return Number.MAX_SAFE_INTEGER;
+  const [h, m] = value.split(":").map((n) => parseInt(n, 10));
+  return h * 60 + m;
+}
+
+function sortRoutines(routines) {
+  return [...routines].sort(
+    (a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time)
+  );
 }
 
 // ---------------------------

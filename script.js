@@ -559,7 +559,7 @@ function deleteRoutine(id) {
 
 function isValidTime(value) {
   // 00-23 for hours, 00-59 for minutes
-  return /^([01]?\\d|2[0-3]):[0-5]\\d$/.test(value);
+  return /^([01]?\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 function parseTimeToMinutes(value) {

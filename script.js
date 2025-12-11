@@ -386,16 +386,14 @@ function loadRoutines() {
       console.error("Failed to parse routines data", e);
     }
   }
-  const isValidTimetable = isValidTimetableArray(routines);
+  let normalized = normalizeTimetable(routines);
 
-  if (!isValidTimetable || routines.length === 0) {
-    routines = DEFAULT_ROUTINES;
-    localStorage.setItem(STORAGE_KEYS.routines, JSON.stringify(routines));
+  if (!normalized.length) {
+    normalized = normalizeTimetable(DEFAULT_ROUTINES);
+    localStorage.setItem(STORAGE_KEYS.routines, JSON.stringify(normalized));
   }
-  routines = routines
-    .filter((r) => isValidTime(r.time))
-    .map((r) => ({ ...r, time: formatTime(r.time) }));
-  renderRoutines(routines);
+
+  renderRoutines(normalized);
 }
 
 function setupRoutineEvents() {
@@ -414,12 +412,12 @@ function setupRoutineEvents() {
       return;
     }
 
-    if (!isValidTime(time)) {
+    const normalizedTime = normalizeTime(time);
+    if (!normalizedTime) {
       showMessage(msgEl, "時刻は 00:00 〜 23:59 形式で入力してください。", true);
       return;
     }
 
-    const normalizedTime = formatTime(time);
     let routines = getRoutines();
 
     if (editingRoutineId) {
@@ -558,8 +556,8 @@ function deleteRoutine(id) {
 }
 
 function isValidTime(value) {
-  // 00-23 for hours, 00-59 for minutes
-  return /^([01]?\d|2[0-3]):[0-5]\d$/.test(value);
+  // 00-23 for hours, 00-59 for minutes (zero padded)
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 function parseTimeToMinutes(value) {
@@ -578,22 +576,23 @@ function sortRoutines(routines) {
   });
 }
 
-function formatTime(value) {
-  if (!isValidTime(value)) return value;
-  const [h, m] = value.split(":").map((n) => parseInt(n, 10));
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+function normalizeTime(value) {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(value);
+  if (!match) return null;
+  const hours = parseInt(match[1], 10);
+  if (hours > 23) return null;
+  return `${String(hours).padStart(2, "0")}:${match[2]}`;
 }
 
-function isValidTimetableArray(routines) {
-  return (
-    Array.isArray(routines) &&
-    routines.every(
-      (r) =>
-        typeof r.time === "string" &&
-        typeof r.activity === "string" &&
-        isValidTime(r.time)
-    )
-  );
+function normalizeTimetable(routines) {
+  if (!Array.isArray(routines)) return [];
+  return routines.reduce((acc, r) => {
+    if (typeof r.activity !== "string") return acc;
+    const normalizedTime = normalizeTime(r.time);
+    if (!normalizedTime) return acc;
+    acc.push({ ...r, time: normalizedTime });
+    return acc;
+  }, []);
 }
 
 // ---------------------------

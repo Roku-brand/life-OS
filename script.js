@@ -386,22 +386,15 @@ function loadRoutines() {
       console.error("Failed to parse routines data", e);
     }
   }
-  const isValidTimetable =
-    Array.isArray(routines) &&
-    routines.every(
-      (r) =>
-        typeof r.time === "string" &&
-        typeof r.activity === "string" &&
-        isValidTime(r.time)
-    );
+  const isValidTimetable = isValidTimetableArray(routines);
 
   if (!isValidTimetable || routines.length === 0) {
     routines = DEFAULT_ROUTINES;
     localStorage.setItem(STORAGE_KEYS.routines, JSON.stringify(routines));
   }
-  routines = routines.map((r) =>
-    isValidTime(r.time) ? { ...r, time: formatTime(r.time) } : r
-  );
+  routines = routines
+    .filter((r) => isValidTime(r.time))
+    .map((r) => ({ ...r, time: formatTime(r.time) }));
   renderRoutines(routines);
 }
 
@@ -570,21 +563,37 @@ function isValidTime(value) {
 }
 
 function parseTimeToMinutes(value) {
-  if (!isValidTime(value)) return Number.MAX_SAFE_INTEGER;
+  if (!isValidTime(value)) return -1;
   const [h, m] = value.split(":").map((n) => parseInt(n, 10));
   return h * 60 + m;
 }
 
 function sortRoutines(routines) {
-  return [...routines].sort(
-    (a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time)
-  );
+  return [...routines].sort((a, b) => {
+    const aMin = parseTimeToMinutes(a.time);
+    const bMin = parseTimeToMinutes(b.time);
+    const safeA = aMin === -1 ? Number.MAX_SAFE_INTEGER : aMin;
+    const safeB = bMin === -1 ? Number.MAX_SAFE_INTEGER : bMin;
+    return safeA - safeB;
+  });
 }
 
 function formatTime(value) {
   if (!isValidTime(value)) return value;
   const [h, m] = value.split(":").map((n) => parseInt(n, 10));
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function isValidTimetableArray(routines) {
+  return (
+    Array.isArray(routines) &&
+    routines.every(
+      (r) =>
+        typeof r.time === "string" &&
+        typeof r.activity === "string" &&
+        isValidTime(r.time)
+    )
+  );
 }
 
 // ---------------------------

@@ -570,6 +570,7 @@ function sortRoutines(routines) {
   return [...routines].sort((a, b) => {
     const aMin = parseTimeToMinutes(a.time);
     const bMin = parseTimeToMinutes(b.time);
+    // Invalid or unparsable times are sent to the end of the list
     const safeA = aMin === -1 ? Number.MAX_SAFE_INTEGER : aMin;
     const safeB = bMin === -1 ? Number.MAX_SAFE_INTEGER : bMin;
     return safeA - safeB;
@@ -581,16 +582,19 @@ function normalizeTime(value) {
   if (!match) return null;
   const hours = parseInt(match[1], 10);
   if (hours > 23) return null;
-  return `${String(hours).padStart(2, "0")}:${match[2]}`;
+  const padded = `${String(hours).padStart(2, "0")}:${match[2]}`;
+  return isValidTime(padded) ? padded : null;
 }
 
 function normalizeTimetable(routines) {
   if (!Array.isArray(routines)) return [];
   return routines.reduce((acc, r) => {
-    if (typeof r.activity !== "string") return acc;
+    const activity =
+      typeof r.activity === "string" ? r.activity.trim() : "";
+    if (!activity) return acc;
     const normalizedTime = normalizeTime(r.time);
     if (!normalizedTime) return acc;
-    acc.push({ ...r, time: normalizedTime });
+    acc.push({ ...r, time: normalizedTime, activity });
     return acc;
   }, []);
 }

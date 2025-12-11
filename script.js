@@ -9,14 +9,17 @@ const STORAGE_KEYS = {
   routines: "jinsei_os_routines",
 };
 
+const ROUTINE_BUTTON_DEFAULT = "時刻表を追加 / 更新";
+const ROUTINE_BUTTON_EDIT = "時刻表を更新";
+
 const DEFAULT_ROUTINES = [
   {
     id: "r_0830",
-    time: "8:30",
+    time: "08:30",
     activity: "起床 / 水分補給・ストレッチ / 身支度",
   },
-  { id: "r_0900", time: "9:00", activity: "朝食" },
-  { id: "r_0920", time: "9:20", activity: "英語学習（集中①）" },
+  { id: "r_0900", time: "09:00", activity: "朝食" },
+  { id: "r_0920", time: "09:20", activity: "英語学習（集中①）" },
   { id: "r_1120", time: "11:20", activity: "休憩（散歩・コーヒー）" },
   { id: "r_1140", time: "11:40", activity: "昼食調理・食事" },
   { id: "r_1220", time: "12:20", activity: "自由休憩（仮眠 OK）" },
@@ -396,6 +399,7 @@ function loadRoutines() {
     routines = DEFAULT_ROUTINES;
     localStorage.setItem(STORAGE_KEYS.routines, JSON.stringify(routines));
   }
+  routines = routines.map((r) => ({ ...r, time: formatTime(r.time) }));
   renderRoutines(routines);
 }
 
@@ -420,18 +424,19 @@ function setupRoutineEvents() {
       return;
     }
 
+    const normalizedTime = formatTime(time);
     let routines = getRoutines();
 
     if (editingRoutineId) {
       routines = routines.map((r) =>
-        r.id === editingRoutineId ? { ...r, time, activity } : r
+        r.id === editingRoutineId ? { ...r, time: normalizedTime, activity } : r
       );
       editingRoutineId = null;
-      addBtn.textContent = "時刻表を追加 / 更新";
+      addBtn.textContent = ROUTINE_BUTTON_DEFAULT;
     } else {
       const newRoutine = {
         id: "r_" + Date.now(),
-        time,
+        time: normalizedTime,
         activity,
       };
       routines.push(newRoutine);
@@ -541,11 +546,11 @@ function startEditRoutine(id) {
 
   editingRoutineId = id;
   document.getElementById("add-routine").textContent =
-    "時刻表を更新";
+    ROUTINE_BUTTON_EDIT;
 }
 
 function deleteRoutine(id) {
-  if (!confirm("このルーティーンを削除しますか？")) return;
+  if (!confirm("この時刻表の行を削除しますか？")) return;
   let routines = getRoutines();
   routines = routines.filter((r) => r.id !== id);
   routines = sortRoutines(routines);
@@ -572,6 +577,11 @@ function sortRoutines(routines) {
   return [...routines].sort(
     (a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time)
   );
+}
+
+function formatTime(value) {
+  const [h, m] = value.split(":").map((n) => parseInt(n, 10));
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 // ---------------------------

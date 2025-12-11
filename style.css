@@ -326,6 +326,44 @@ textarea {
   height: 16px;
 }
 
+/* 時刻表テーブル */
+
+.timetable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.timetable th,
+.timetable td {
+  padding: 8px 6px;
+  font-size: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.timetable th {
+  color: var(--text-sub);
+  font-weight: 700;
+}
+
+.timetable-time {
+  width: 76px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text-main);
+}
+
+.timetable-activity {
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.timetable-actions {
+  width: 88px;
+  text-align: right;
+  white-space: nowrap;
+}
+
 /* PC表示時（簡易） */
 
 @media (min-width: 768px) {

@@ -9,6 +9,39 @@ const STORAGE_KEYS = {
   routines: "jinsei_os_routines",
 };
 
+const ROUTINE_BUTTON_DEFAULT = "時刻表を追加 / 更新";
+const ROUTINE_BUTTON_EDIT = "時刻表を更新";
+
+const DEFAULT_ROUTINES = [
+  {
+    id: "r_0830",
+    time: "08:30",
+    activity: "起床 / 水分補給・ストレッチ / 身支度",
+  },
+  { id: "r_0900", time: "09:00", activity: "朝食" },
+  { id: "r_0920", time: "09:20", activity: "英語学習（集中①）" },
+  { id: "r_1120", time: "11:20", activity: "休憩（散歩・コーヒー）" },
+  { id: "r_1140", time: "11:40", activity: "昼食調理・食事" },
+  { id: "r_1220", time: "12:20", activity: "自由休憩（仮眠 OK）" },
+  { id: "r_1300", time: "13:00", activity: "軽い家事・雑務" },
+  { id: "r_1400", time: "14:00", activity: "AI キャッチアップ" },
+  { id: "r_1430", time: "14:30", activity: "フリー枠（買い物・雑務など）" },
+  { id: "r_1500", time: "15:00", activity: "就活対策（1 時間）" },
+  {
+    id: "r_1600",
+    time: "16:00",
+    activity: "筋トレ（45 分）、ストレッチ、シャワー・水分",
+  },
+  { id: "r_1730", time: "17:30", activity: "英語学習（集中②／軽め）" },
+  { id: "r_1830", time: "18:30", activity: "夕食調理・食事" },
+  { id: "r_1930", time: "19:30", activity: "余暇（読書・動画）" },
+  { id: "r_2100", time: "21:00", activity: "日記・家計簿・翌日の ToDo 決め" },
+  { id: "r_2200", time: "22:00", activity: "入浴（湯船）" },
+  { id: "r_2230", time: "22:30", activity: "瞑想・ライトダウン" },
+  { id: "r_2300", time: "23:00", activity: "読書・就寝準備" },
+  { id: "r_0030", time: "00:30", activity: "就寝（翌日）" },
+];
+
 // 編集中ID管理用
 let editingPrincipleId = null;
 let editingRoutineId = null;
@@ -353,25 +386,35 @@ function loadRoutines() {
       console.error("Failed to parse routines data", e);
     }
   }
-  renderRoutines(routines);
+  let normalized = normalizeTimetable(routines);
+
+  if (!normalized.length) {
+    normalized = normalizeTimetable(DEFAULT_ROUTINES);
+    localStorage.setItem(STORAGE_KEYS.routines, JSON.stringify(normalized));
+  }
+
+  renderRoutines(normalized);
 }
 
 function setupRoutineEvents() {
   const addBtn = document.getElementById("add-routine");
-  const filterSelect = document.getElementById("routine-filter");
   const msgEl = document.getElementById("routine-message");
 
   addBtn.addEventListener("click", () => {
-    const nameEl = document.getElementById("routine-name");
-    const typeEl = document.getElementById("routine-type");
-    const noteEl = document.getElementById("routine-note");
+    const timeEl = document.getElementById("routine-time");
+    const activityEl = document.getElementById("routine-activity");
 
-    const name = nameEl.value.trim();
-    const routineType = typeEl.value;
-    const note = noteEl.value.trim();
+    const time = timeEl.value.trim();
+    const activity = activityEl.value.trim();
 
-    if (!name) {
-      showMessage(msgEl, "ルーティーン名を入力してください。", true);
+    if (!time || !activity) {
+      showMessage(msgEl, "時刻と内容を入力してください。", true);
+      return;
+    }
+
+    const normalizedTime = normalizeTime(time);
+    if (!normalizedTime) {
+      showMessage(msgEl, "時刻は 00:00 〜 23:59 形式で入力してください。", true);
       return;
     }
 
@@ -379,40 +422,32 @@ function setupRoutineEvents() {
 
     if (editingRoutineId) {
       routines = routines.map((r) =>
-        r.id === editingRoutineId ? { ...r, name, type: routineType, note } : r
+        r.id === editingRoutineId ? { ...r, time: normalizedTime, activity } : r
       );
       editingRoutineId = null;
-      addBtn.textContent = "ルーティーンを追加 / 更新";
+      addBtn.textContent = ROUTINE_BUTTON_DEFAULT;
     } else {
       const newRoutine = {
         id: "r_" + Date.now(),
-        name,
-        type: routineType,
-        note,
-        done: false,
-        createdAt: new Date().toISOString(),
+        time: normalizedTime,
+        activity,
       };
-      routines.unshift(newRoutine);
+      routines.push(newRoutine);
     }
+
+    routines = sortRoutines(routines);
 
     localStorage.setItem(
       STORAGE_KEYS.routines,
       JSON.stringify(routines)
     );
 
-    nameEl.value = "";
-    noteEl.value = "";
-    typeEl.value = "Daily";
+    timeEl.value = "";
+    activityEl.value = "";
 
-    showMessage(msgEl, "ルーティーンを保存しました。");
+    showMessage(msgEl, "時刻表を保存しました。");
 
-    renderRoutines(routines, filterSelect.value);
-  });
-
-  filterSelect.addEventListener("change", () => {
-    const filter = filterSelect.value;
-    const routines = getRoutines();
-    renderRoutines(routines, filter);
+    renderRoutines(routines);
   });
 }
 
@@ -420,75 +455,53 @@ function getRoutines() {
   const dataJSON = localStorage.getItem(STORAGE_KEYS.routines);
   if (!dataJSON) return [];
   try {
-    return JSON.parse(dataJSON);
+    const parsed = JSON.parse(dataJSON);
+    if (Array.isArray(parsed)) return parsed;
+    return [];
   } catch {
     return [];
   }
 }
 
-function renderRoutines(routines, filter = "all") {
+function renderRoutines(routines) {
   const listEl = document.getElementById("routine-list");
   listEl.innerHTML = "";
 
-  const filtered = routines.filter((r) => {
-    if (filter === "all") return true;
-    return r.type === filter;
-  });
+  routines = sortRoutines(routines);
 
-  if (!filtered.length) {
+  if (!routines.length) {
     const empty = document.createElement("div");
     empty.className = "card";
     empty.innerHTML =
-      '<p class="card-description">まだルーティーンがありません。人生OSを支える「核となる習慣」から少しずつ追加していきましょう。</p>';
+      '<p class="card-description">まだ時刻表がありません。1日の流れを時刻付きで追加してください。</p>';
     listEl.appendChild(empty);
     return;
   }
 
-  filtered.forEach((r) => {
-    const item = document.createElement("div");
-    item.className = "routine-item";
+  const table = document.createElement("table");
+  table.className = "timetable";
 
-    const header = document.createElement("div");
-    header.className = "item-header";
+  const thead = document.createElement("thead");
+  thead.innerHTML = "<tr><th>時刻</th><th>内容</th><th></th></tr>";
+  table.appendChild(thead);
 
-    const titleEl = document.createElement("div");
-    titleEl.className = "item-title";
-    titleEl.textContent = r.name;
+  const tbody = document.createElement("tbody");
 
-    const chip = document.createElement("div");
-    chip.className = "item-chip";
-    chip.textContent = r.type;
+  routines.forEach((r) => {
+    const row = document.createElement("tr");
 
-    header.appendChild(titleEl);
-    header.appendChild(chip);
+    const timeTd = document.createElement("td");
+    timeTd.className = "timetable-time";
+    timeTd.textContent = r.time;
+    row.appendChild(timeTd);
 
-    const bodyEl = document.createElement("div");
-    bodyEl.className = "item-body";
-    bodyEl.textContent = r.note || "";
+    const activityTd = document.createElement("td");
+    activityTd.className = "timetable-activity";
+    activityTd.textContent = r.activity || "";
+    row.appendChild(activityTd);
 
-    const meta = document.createElement("div");
-    meta.className = "routine-meta";
-
-    const checkWrap = document.createElement("label");
-    checkWrap.className = "routine-check";
-
-    const check = document.createElement("input");
-    check.type = "checkbox";
-    check.checked = !!r.done;
-    check.addEventListener("change", () => {
-      toggleRoutineDone(r.id, check.checked);
-    });
-
-    const checkText = document.createElement("span");
-    checkText.textContent = "今日やった";
-
-    checkWrap.appendChild(check);
-    checkWrap.appendChild(checkText);
-
-    meta.appendChild(checkWrap);
-
-    const actions = document.createElement("div");
-    actions.className = "item-actions";
+    const actionsTd = document.createElement("td");
+    actionsTd.className = "timetable-actions";
 
     const editBtn = document.createElement("button");
     editBtn.className = "btn-ghost edit";
@@ -504,17 +517,16 @@ function renderRoutines(routines, filter = "all") {
       deleteRoutine(r.id);
     });
 
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(delBtn);
 
-    meta.appendChild(actions);
+    row.appendChild(actionsTd);
 
-    item.appendChild(header);
-    if (r.note) item.appendChild(bodyEl);
-    item.appendChild(meta);
-
-    listEl.appendChild(item);
+    tbody.appendChild(row);
   });
+
+  table.appendChild(tbody);
+  listEl.appendChild(table);
 }
 
 function startEditRoutine(id) {
@@ -522,37 +534,69 @@ function startEditRoutine(id) {
   const target = routines.find((r) => r.id === id);
   if (!target) return;
 
-  document.getElementById("routine-name").value = target.name;
-  document.getElementById("routine-type").value = target.type;
-  document.getElementById("routine-note").value = target.note || "";
+  document.getElementById("routine-time").value = target.time;
+  document.getElementById("routine-activity").value = target.activity || "";
 
   editingRoutineId = id;
   document.getElementById("add-routine").textContent =
-    "ルーティーンを更新";
+    ROUTINE_BUTTON_EDIT;
 }
 
 function deleteRoutine(id) {
-  if (!confirm("このルーティーンを削除しますか？")) return;
+  if (!confirm("この時刻表の行を削除しますか？")) return;
   let routines = getRoutines();
   routines = routines.filter((r) => r.id !== id);
+  routines = sortRoutines(routines);
   localStorage.setItem(
     STORAGE_KEYS.routines,
     JSON.stringify(routines)
   );
 
-  const filter = document.getElementById("routine-filter").value;
-  renderRoutines(routines, filter);
+  renderRoutines(routines);
 }
 
-function toggleRoutineDone(id, done) {
-  const routines = getRoutines();
-  const updated = routines.map((r) =>
-    r.id === id ? { ...r, done: !!done } : r
-  );
-  localStorage.setItem(
-    STORAGE_KEYS.routines,
-    JSON.stringify(updated)
-  );
+function isValidTime(value) {
+  // 00-23 for hours, 00-59 for minutes (zero padded)
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function parseTimeToMinutes(value) {
+  if (!isValidTime(value)) return -1;
+  const [h, m] = value.split(":").map((n) => parseInt(n, 10));
+  return h * 60 + m;
+}
+
+function sortRoutines(routines) {
+  return [...routines].sort((a, b) => {
+    const aMin = parseTimeToMinutes(a.time);
+    const bMin = parseTimeToMinutes(b.time);
+    // Invalid or unparsable times are sent to the end of the list
+    const safeA = aMin === -1 ? Number.MAX_SAFE_INTEGER : aMin;
+    const safeB = bMin === -1 ? Number.MAX_SAFE_INTEGER : bMin;
+    return safeA - safeB;
+  });
+}
+
+function normalizeTime(value) {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(value);
+  if (!match) return null;
+  const hours = parseInt(match[1], 10);
+  if (hours > 23) return null;
+  const padded = `${String(hours).padStart(2, "0")}:${match[2]}`;
+  return isValidTime(padded) ? padded : null;
+}
+
+function normalizeTimetable(routines) {
+  if (!Array.isArray(routines)) return [];
+  return routines.reduce((acc, r) => {
+    const activity =
+      typeof r.activity === "string" ? r.activity.trim() : "";
+    if (!activity) return acc;
+    const normalizedTime = normalizeTime(r.time);
+    if (!normalizedTime) return acc;
+    acc.push({ ...r, time: normalizedTime, activity });
+    return acc;
+  }, []);
 }
 
 // ---------------------------

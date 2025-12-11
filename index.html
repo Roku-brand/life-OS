@@ -151,45 +151,33 @@
     <!-- ルーティーン -->
     <section id="tab-routines" class="tab-page">
       <div class="card">
-        <h2 class="card-title">ルーティーン</h2>
+        <h2 class="card-title">ルーティーン（1日の流れ）</h2>
         <p class="card-description">
-          行動OSを支える「コア習慣リスト」を管理します。記録の量より、習慣の質を大事にします。
+          1日のルーティーンを時刻表形式で管理します。デフォルトで「【1日の流れ】」をセットしていますが、必要に応じて編集してください。
         </p>
 
         <div class="form-group">
-          <label for="routine-name">ルーティーン名</label>
-          <input id="routine-name" type="text" placeholder="例：朝起きたら窓を開けて深呼吸" />
+          <label for="routine-time">時刻</label>
+          <input id="routine-time" type="text" placeholder="例：08:30" />
         </div>
 
         <div class="form-group">
-          <label for="routine-type">種別</label>
-          <select id="routine-type">
-            <option value="Daily">Daily（毎日）</option>
-            <option value="Weekly">Weekly（毎週）</option>
-            <option value="Monthly">Monthly（毎月）</option>
-          </select>
+          <label for="routine-activity">内容</label>
+          <textarea
+            id="routine-activity"
+            rows="2"
+            placeholder="例：起床 / 水分補給・ストレッチ / 身支度"
+          ></textarea>
         </div>
 
-        <div class="form-group">
-          <label for="routine-note">メモ（狙い・意味など）</label>
-          <textarea id="routine-note" rows="3" placeholder="この習慣の目的や、どのOSと関係するかなど。"></textarea>
-        </div>
-
-        <button id="add-routine" class="btn-primary">ルーティーンを追加 / 更新</button>
+        <button id="add-routine" class="btn-primary">時刻表を追加 / 更新</button>
         <div id="routine-message" class="save-message"></div>
-
-        <div class="filter-group">
-          <label for="routine-filter">種別で絞り込み</label>
-          <select id="routine-filter">
-            <option value="all">すべて</option>
-            <option value="Daily">Daily</option>
-            <option value="Weekly">Weekly</option>
-            <option value="Monthly">Monthly</option>
-          </select>
-        </div>
       </div>
 
-      <div id="routine-list" class="list-container"></div>
+      <div class="card">
+        <h3 class="card-title">今日の時刻表</h3>
+        <div id="routine-list" class="list-container"></div>
+      </div>
     </section>
   </main>
 

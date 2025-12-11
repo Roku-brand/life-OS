@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>人生ーOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-title">人生ーOS</div>
+    <div class="app-subtitle">自分の人生OSを整えるための個人用ダッシュボード</div>
+  </header>
+
+  <main class="app-main">
+    <!-- プロフィール -->
+    <section id="tab-profile" class="tab-page active">
+      <div class="card">
+        <h2 class="card-title">プロフィール</h2>
+        <p class="card-description">
+          キャリアではなく「人としての自分」「人生観」「価値観」を整理するためのページです。
+        </p>
+
+        <div class="form-group">
+          <label for="profile-name">名前</label>
+          <input id="profile-name" type="text" placeholder="例：つばさ / Tsubasa" />
+        </div>
+
+        <div class="form-group">
+          <label for="profile-career">経歴</label>
+          <textarea id="profile-career" rows="3" placeholder="生まれ・育ち・これまでの歩みをざっくりと"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="profile-values">大事にしている価値観</label>
+          <textarea id="profile-values" rows="4" placeholder="例：誠実さ / 自由 / 探究心 / 家族との時間 など"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="profile-strengths">性格・強み・弱み</label>
+          <textarea id="profile-strengths" rows="4" placeholder="自分のクセや強み・弱みを正直に書いてみる"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="profile-hobbies">好きなこと・趣味</label>
+          <textarea id="profile-hobbies" rows="3" placeholder="楽しい・没頭できる・リフレッシュになること"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="profile-lifestyle">理想の生き方・ライフスタイル</label>
+          <textarea id="profile-lifestyle" rows="4" placeholder="どんな1日・どんな1週間・どんな人生でありたいか"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="profile-tags">ハッシュタグ（自分をキーワードで表す）</label>
+          <input id="profile-tags" type="text" placeholder="例：#内省好き #AI世代 #二周目視点" />
+        </div>
+
+        <button id="save-profile" class="btn-primary">プロフィールを保存</button>
+        <div id="profile-message" class="save-message"></div>
+      </div>
+    </section>
+
+    <!-- 戦略 -->
+    <section id="tab-strategy" class="tab-page">
+      <div class="card">
+        <h2 class="card-title">戦略</h2>
+        <p class="card-description">
+          人生全体の長期ビジョンや中期戦略、直近のフォーカスを整理するページです。
+        </p>
+
+        <div class="form-group">
+          <label for="strategy-long">長期ビジョン（10〜20年）</label>
+          <textarea id="strategy-long" rows="4" placeholder="10〜20年後、どんな人生を送っていたいか。場所・人間関係・仕事・健康など。"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="strategy-mid">中期戦略（3〜5年）</label>
+          <textarea id="strategy-mid" rows="4" placeholder="長期ビジョンに近づくための3〜5年スパンの戦略。学び・経験・環境の設計など。"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="strategy-year">直近1年のフォーカス</label>
+          <textarea id="strategy-year" rows="4" placeholder="この1年で特にフォーカスするテーマやチャレンジ。"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="strategy-experiments">今試している仮説・挑戦</label>
+          <textarea id="strategy-experiments" rows="4" placeholder="今トライしていること、その仮説、検証したいこと。"></textarea>
+        </div>
+
+        <button id="save-strategy" class="btn-primary">戦略を保存</button>
+        <div id="strategy-message" class="save-message"></div>
+      </div>
+    </section>
+
+    <!-- 処世術 -->
+    <section id="tab-principles" class="tab-page">
+      <div class="card">
+        <h2 class="card-title">処世術（5つのOS）</h2>
+        <p class="card-description">
+          自分なりの原則や名言を「内部OS・対人OS・社会OS・行動OS・未来OS」に分けて整理します。
+        </p>
+
+        <div class="form-group">
+          <label for="principle-title">タイトル</label>
+          <input id="principle-title" type="text" placeholder="例：疲れているときに大事な決断をしない" />
+        </div>
+
+        <div class="form-group">
+          <label for="principle-category">カテゴリ（OS）</label>
+          <select id="principle-category">
+            <option value="内部OS">内部OS（内面・解釈・価値観）</option>
+            <option value="対人OS">対人OS（人間関係・コミュニケーション）</option>
+            <option value="社会OS">社会OS（社会・組織・キャリア・お金）</option>
+            <option value="行動OS">行動OS（日々の行動・意思決定）</option>
+            <option value="未来OS">未来OS（長期ビジョン・二周目視点）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="principle-body">本文／解説</label>
+          <textarea id="principle-body" rows="4" placeholder="この原則の意味や背景となるエピソード、気をつけたいポイントなど。"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="principle-tags">タグ（カンマ区切り）</label>
+          <input id="principle-tags" type="text" placeholder="例：判断, 休息, メンタル" />
+        </div>
+
+        <button id="add-principle" class="btn-primary">処世術カードを追加 / 更新</button>
+        <div id="principle-message" class="save-message"></div>
+
+        <div class="filter-group">
+          <label for="principle-filter">カテゴリで絞り込み</label>
+          <select id="principle-filter">
+            <option value="all">すべて</option>
+            <option value="内部OS">内部OS</option>
+            <option value="対人OS">対人OS</option>
+            <option value="社会OS">社会OS</option>
+            <option value="行動OS">行動OS</option>
+            <option value="未来OS">未来OS</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="principle-list" class="list-container"></div>
+    </section>
+
+    <!-- ルーティーン -->
+    <section id="tab-routines" class="tab-page">
+      <div class="card">
+        <h2 class="card-title">ルーティーン</h2>
+        <p class="card-description">
+          行動OSを支える「コア習慣リスト」を管理します。記録の量より、習慣の質を大事にします。
+        </p>
+
+        <div class="form-group">
+          <label for="routine-name">ルーティーン名</label>
+          <input id="routine-name" type="text" placeholder="例：朝起きたら窓を開けて深呼吸" />
+        </div>
+
+        <div class="form-group">
+          <label for="routine-type">種別</label>
+          <select id="routine-type">
+            <option value="Daily">Daily（毎日）</option>
+            <option value="Weekly">Weekly（毎週）</option>
+            <option value="Monthly">Monthly（毎月）</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="routine-note">メモ（狙い・意味など）</label>
+          <textarea id="routine-note" rows="3" placeholder="この習慣の目的や、どのOSと関係するかなど。"></textarea>
+        </div>
+
+        <button id="add-routine" class="btn-primary">ルーティーンを追加 / 更新</button>
+        <div id="routine-message" class="save-message"></div>
+
+        <div class="filter-group">
+          <label for="routine-filter">種別で絞り込み</label>
+          <select id="routine-filter">
+            <option value="all">すべて</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="routine-list" class="list-container"></div>
+    </section>
+  </main>
+
+  <nav class="tab-bar">
+    <button class="tab-button active" data-target="tab-profile">
+      <span class="tab-icon">👤</span>
+      <span class="tab-label">プロフィール</span>
+    </button>
+    <button class="tab-button" data-target="tab-strategy">
+      <span class="tab-icon">📜</span>
+      <span class="tab-label">戦略</span>
+    </button>
+    <button class="tab-button" data-target="tab-principles">
+      <span class="tab-icon">📚</span>
+      <span class="tab-label">処世術</span>
+    </button>
+    <button class="tab-button" data-target="tab-routines">
+      <span class="tab-icon">⏱</span>
+      <span class="tab-label">ルーティーン</span>
+    </button>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>

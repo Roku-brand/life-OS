@@ -399,7 +399,9 @@ function loadRoutines() {
     routines = DEFAULT_ROUTINES;
     localStorage.setItem(STORAGE_KEYS.routines, JSON.stringify(routines));
   }
-  routines = routines.map((r) => ({ ...r, time: formatTime(r.time) }));
+  routines = routines.map((r) =>
+    isValidTime(r.time) ? { ...r, time: formatTime(r.time) } : r
+  );
   renderRoutines(routines);
 }
 
@@ -580,6 +582,7 @@ function sortRoutines(routines) {
 }
 
 function formatTime(value) {
+  if (!isValidTime(value)) return value;
   const [h, m] = value.split(":").map((n) => parseInt(n, 10));
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
